@@ -8,14 +8,14 @@ dotenv.config();
 
 const app = express();
 
-// Cloudinary
+// Cloudinary Configuration
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Multer + Cloudinary
+// Store uploads in Cloudinary
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -25,35 +25,33 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 
+// Home Page
 app.get("/", (req, res) => {
   res.send(`
-    <h1>Upload a Photo</h1>
+    <h1>Upload Photo</h1>
 
     <form action="/upload" method="POST" enctype="multipart/form-data">
-      <input type="file" name="photo">
-      <button>Upload</button>
+      <input type="file" name="photo" required>
+      <button type="submit">Upload</button>
     </form>
   `);
 });
 
+// Upload Route
 app.post("/upload", upload.single("photo"), (req, res) => {
   res.send(`
-    <h2>Photo Uploaded Successfully!</h2>
+    <h1>Photo Uploaded Successfully ✅</h1>
 
     <img src="${req.file.path}" width="300">
 
     <br><br>
 
-    <p>Image URL:</p>
-
-    <a href="${req.file.path}" target="_blank">${req.file.path}</a>
-
-    <br><br>
-
-    <a href="/">Upload Another</a>
+    <a href="/">Upload Another Photo</a>
   `);
 });
 
-app.listen(3000, () => {
-  console.log("Server running...");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("Server is running...");
 });
