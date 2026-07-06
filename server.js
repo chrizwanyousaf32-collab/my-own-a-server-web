@@ -1,11 +1,29 @@
 import express from "express";
 import multer from "multer";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 
-const upload = multer({ dest: "uploads/" });
+// Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-app.use("/uploads", express.static("uploads"));
+// Multer + Cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "my_photos",
+  },
+});
+
+const upload = multer({ storage });
 
 app.get("/", (req, res) => {
   res.send(`
@@ -20,9 +38,15 @@ app.get("/", (req, res) => {
 
 app.post("/upload", upload.single("photo"), (req, res) => {
   res.send(`
-    <h2>Photo Uploaded!</h2>
+    <h2>Photo Uploaded Successfully!</h2>
 
-    <img src="/uploads/${req.file.filename}" width="300">
+    <img src="${req.file.path}" width="300">
+
+    <br><br>
+
+    <p>Image URL:</p>
+
+    <a href="${req.file.path}" target="_blank">${req.file.path}</a>
 
     <br><br>
 
