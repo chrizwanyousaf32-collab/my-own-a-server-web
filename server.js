@@ -8,14 +8,14 @@ dotenv.config();
 
 const app = express();
 
-// Cloudinary
+// Cloudinary Configuration
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Multer + Cloudinary
+// Multer + Cloudinary Storage
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -26,7 +26,7 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 
-// Home
+// Home Route
 app.get("/", (req, res) => {
   res.redirect("/upload");
 });
@@ -44,21 +44,42 @@ app.get("/upload", (req, res) => {
   `);
 });
 
-// Upload Image
-app.post("/upload", upload.single("photo"), (req, res) => {
-  res.send(`
-    <h1>Photo Uploaded ✅</h1>
+// Upload Route
+app.post("/upload", (req, res) => {
+  upload.single("photo")(req, res, (err) => {
+    if (err) {
+      console.error("UPLOAD ERROR:", err);
 
-    <img src="${req.file.path}" width="300">
+      return res.status(500).send(`
+        <h1>Upload Failed ❌</h1>
+        <pre>${err.stack || err.message || JSON.stringify(err)}</pre>
+      `);
+    }
 
-    <p>
-      <a href="${req.file.path}" target="_blank">Open Image</a>
-    </p>
+    if (!req.file) {
+      return res.status(400).send(`
+        <h1>No file uploaded ❌</h1>
+      `);
+    }
 
-    <p>
-      <a href="/upload">Upload Another</a>
-    </p>
-  `);
+    res.send(`
+      <h1>Photo Uploaded Successfully ✅</h1>
+
+      <img src="${req.file.path}" width="300">
+
+      <br><br>
+
+      <a href="${req.file.path}" target="_blank">
+        Open Image
+      </a>
+
+      <br><br>
+
+      <a href="/upload">
+        Upload Another Photo
+      </a>
+    `);
+  });
 });
 
 const PORT = process.env.PORT || 3000;
